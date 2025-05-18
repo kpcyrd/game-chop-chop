@@ -3,8 +3,10 @@ use crate::gfx::tile::Tile;
 use core::fmt::Debug;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::BinaryColor, prelude::*};
 
+pub const GRID_WIDTH: u32 = 4;
+
 /// tiles[x][y]
-type Tiles = [[bool; 4]; 4];
+type Tiles = [[bool; 4]; GRID_WIDTH as usize];
 
 #[allow(dead_code)] // TODO
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -169,6 +171,7 @@ impl Rotation {
     }
 }
 
+#[derive(Clone)]
 pub struct Grid {
     tiles: Tiles,
     pub piece: Piece,
@@ -206,6 +209,27 @@ impl Grid {
             .flat_map(Self::lowest_lane_point)
             .max()
             .unwrap_or(0)
+    }
+
+    fn padding<I: Iterator<Item = [bool; 4]>>(iter: I) -> u32 {
+        let mut padding = 0;
+        for lane in iter {
+            if lane.into_iter().any(|tile| tile) {
+                break;
+            }
+            padding += 1;
+        }
+        padding
+    }
+
+    #[inline]
+    pub fn padding_left(&self) -> u32 {
+        Self::padding(self.tiles.into_iter())
+    }
+
+    #[inline]
+    pub fn padding_right(&self) -> u32 {
+        Self::padding(self.tiles.into_iter().rev())
     }
 
     pub fn collision_points(&self) -> [Option<u8>; 4] {

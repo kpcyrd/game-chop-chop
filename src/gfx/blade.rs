@@ -18,6 +18,7 @@ pub const TOP_SPEED: u8 = 4;
 
 static_assertions::const_assert_eq!(X_OFFSET, 20);
 
+#[derive(Clone)]
 pub struct Blade {
     bottom_right: Point,
     speed: Timer,

@@ -3,7 +3,6 @@ use crate::gfx::blade::Blade;
 use crate::gfx::tile::Tile;
 use crate::pieces::{self, Piece};
 use crate::timer::Timer;
-use core::cmp;
 use core::fmt::Debug;
 use embedded_graphics::{
     draw_target::DrawTarget, pixelcolor::BinaryColor, prelude::*, primitives::Polyline, text::Text,
@@ -21,6 +20,7 @@ const INITIAL_LANE: u32 = MIN_LANE + 2;
 
 static_assertions::const_assert!(INITIAL_LANE + 4 <= NUM_LANES);
 
+#[derive(Clone)]
 pub struct Game {
     blade: Blade,
     lane: u32,
@@ -61,20 +61,54 @@ impl Game {
         }
     }
 
+    fn try_to<F: Fn(&mut Self)>(&mut self, update: F) -> bool {
+        let mut next = self.clone();
+        update(&mut next);
+        if !next.collides() {
+            *self = next;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn collides(&self) -> bool {
+        // check left wall
+        if self.lane + self.piece.padding_left() < MIN_LANE {
+            return true;
+        }
+
+        // check right wall
+        if self.lane + pieces::GRID_WIDTH - self.piece.padding_right() > NUM_LANES {
+            return true;
+        }
+
+        // TODO
+        false
+    }
+
     pub fn button_up(&mut self) {
-        self.piece.rotate();
+        self.try_to(|game| {
+            game.piece.rotate();
+        });
     }
 
     pub fn button_down(&mut self) {
-        self.drop_speed = i32::MAX;
+        self.try_to(|game| {
+            game.drop_speed = i32::MAX;
+        });
     }
 
     pub fn button_right(&mut self) {
-        self.lane = cmp::min(self.lane + 1, NUM_LANES - 1);
+        self.try_to(|game| {
+            game.lane = game.lane.saturating_add(1);
+        });
     }
 
     pub fn button_left(&mut self) {
-        self.lane = cmp::max(self.lane.saturating_sub(1), MIN_LANE);
+        self.try_to(|game| {
+            game.lane = game.lane.saturating_sub(1);
+        });
     }
 
     #[inline(always)]
