@@ -24,7 +24,7 @@ static_assertions::const_assert!(INITIAL_LANE + 4 <= NUM_LANES);
 pub struct Game {
     blade: Blade,
     lane: u32,
-    grid: pieces::Grid,
+    piece: pieces::Grid,
     drop: i32,
     drop_timer: Timer,
     drop_speed: i32,
@@ -36,7 +36,7 @@ impl Game {
         Game {
             blade: Blade::new(),
             lane: INITIAL_LANE,
-            grid: Piece::T.into_grid(),
+            piece: Piece::T.into_grid(),
             drop: INITIAL_DROP_POSITION,
             drop_timer: Timer::new(DROP_SPEED),
             drop_speed: 1,
@@ -62,7 +62,7 @@ impl Game {
     }
 
     pub fn button_up(&mut self) {
-        self.grid.rotate();
+        self.piece.rotate();
     }
 
     pub fn button_down(&mut self) {
@@ -104,15 +104,15 @@ impl Game {
     }
 
     pub fn spawn_next_piece(&mut self) {
-        let next_piece = if self.grid.piece == Piece::T {
+        let next_piece = if self.piece.piece == Piece::T {
             Piece::S
         } else {
             Piece::T
         };
 
-        self.grid = next_piece.into_grid();
+        self.piece = next_piece.into_grid();
 
-        self.drop = -(self.grid.lowest_point() as i32 * LANE_WIDTH as i32);
+        self.drop = -(self.piece.lowest_point() as i32 * LANE_WIDTH as i32);
         self.drop_speed = 1; // TODO: this may get faster over time
     }
 
@@ -149,7 +149,7 @@ impl Game {
         }
 
         // render current piece
-        self.grid.render(
+        self.piece.render(
             display,
             LANE_OFFSET + Point::new((LANE_WIDTH * self.lane) as i32, self.drop),
         );
