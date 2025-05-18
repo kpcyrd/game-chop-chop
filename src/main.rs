@@ -97,11 +97,13 @@ fn main() -> ! {
     let mut display = display::init(i2c);
 
     // configure button
-    let mut button_right_pin = pins.gp0.into_pull_up_input();
-    let mut button_up_pin = pins.gp1.into_pull_up_input();
+    let mut button_down_pin = pins.gp0.into_pull_up_input();
+    let mut button_right_pin = pins.gp1.into_pull_up_input();
+    let mut button_up_pin = pins.gp3.into_pull_up_input();
     let mut button_left_pin = pins.gp7.into_pull_up_input();
     let mut button_center_pin = pins.gp8.into_pull_up_input();
 
+    let mut button_down = Input::default();
     let mut button_right = Input::default();
     let mut button_up = Input::default();
     let mut button_left = Input::default();
@@ -113,6 +115,11 @@ fn main() -> ! {
 
     // enter loop
     loop {
+        match button_down.probe(|| button_down_pin.is_low().unwrap()) {
+            Some(Action::Pressed) => game.button_down(),
+            Some(Action::Released) => (),
+            None => (),
+        }
         match button_right.probe(|| button_right_pin.is_low().unwrap()) {
             Some(Action::Pressed) => game.button_right(),
             Some(Action::Released) => (),
