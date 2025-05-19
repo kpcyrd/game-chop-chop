@@ -169,6 +169,39 @@ impl Game {
                 break;
             }
         }
+
+        // check completed rows
+        for y in 0..NUM_ROWS {
+            let y = y as usize;
+
+            let complete = self.lanes.iter().enumerate().all(|(x, lane)| {
+                if x < MIN_LANE as usize {
+                    return true;
+                }
+                let Some(tile) = lane.get(y) else {
+                    return false;
+                };
+                let Some(_) = tile else {
+                    return false;
+                };
+                true
+            });
+            if !complete {
+                continue;
+            }
+
+            for lane in &mut self.lanes {
+                let Some(slot) = lane.get_mut(y) else {
+                    continue;
+                };
+                let Some(tile) = slot else {
+                    continue;
+                };
+                if !tile.wall {
+                    *slot = None;
+                }
+            }
+        }
     }
 
     fn persist_piece(&mut self) {
