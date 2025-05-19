@@ -190,6 +190,11 @@ impl Grid {
         }
     }
 
+    #[inline]
+    pub fn tiles(&self) -> &Tiles {
+        &self.tiles
+    }
+
     pub fn rotate(&mut self) {
         self.tiles = Default::default();
         self.rotation.rotate();
@@ -230,14 +235,6 @@ impl Grid {
     #[inline]
     pub fn padding_right(&self) -> u32 {
         Self::padding(self.tiles.into_iter().rev())
-    }
-
-    pub fn collision_points(&self) -> [Option<u8>; 4] {
-        let mut points = [None; 4];
-        for (idx, lane) in self.tiles.iter().enumerate() {
-            points[idx] = Self::lowest_lane_point(lane);
-        }
-        points
     }
 
     pub fn render<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D, point: Point)

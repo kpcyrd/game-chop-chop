@@ -110,8 +110,8 @@ fn main() -> ! {
     let mut button_center = Input::default();
 
     let mut game = Game::new();
-    game.add_obstacle_at_row(5);
     game.add_obstacle_at_row(8);
+    game.add_obstacle_at_row(14);
 
     // enter loop
     loop {

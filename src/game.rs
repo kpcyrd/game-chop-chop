@@ -18,6 +18,7 @@ const DROP_SPEED: u8 = 1;
 const INITIAL_DROP_POSITION: i32 = -(4 * LANE_WIDTH as i32);
 const INITIAL_LANE: u32 = MIN_LANE + 2;
 
+static_assertions::const_assert_eq!(NUM_ROWS, 21);
 static_assertions::const_assert!(INITIAL_LANE + 4 <= NUM_LANES);
 
 #[derive(Clone)]
@@ -83,7 +84,35 @@ impl Game {
             return true;
         }
 
-        // TODO
+        // check tiles
+        let offset_y = (self.drop / LANE_WIDTH as i32) + 1;
+        for (x, lane) in self.piece.tiles().iter().enumerate() {
+            let x = self.lane as usize + x;
+            for (y, tile) in lane.iter().enumerate() {
+                // if there's nothing in the piece grid
+                if !tile {
+                    continue;
+                }
+
+                // only consider piece tiles that are visible
+                let Ok(y) = usize::try_from(offset_y + y as i32) else {
+                    continue;
+                };
+
+                // check for collision
+                let Some(lane) = self.lanes.get(x) else {
+                    return true;
+                };
+                let Some(tile) = lane.get(y) else {
+                    return true;
+                };
+                if tile.is_some() {
+                    return true;
+                }
+            }
+        }
+
+        // everything is fine
         false
     }
 
@@ -127,13 +156,45 @@ impl Game {
             return;
         }
 
-        // collision detection (TODO)
-        let next_step = self.drop_speed;
-        self.drop = self.drop.saturating_add(next_step);
+        // collision detection
+        for _ in 0..self.drop_speed {
+            let collision = !self.try_to(|game| {
+                game.drop = game.drop.saturating_add(1);
+            });
 
-        if self.drop / LANE_WIDTH as i32 >= NUM_ROWS as i32 - 1 {
-            self.lanes[self.lane as usize][(NUM_ROWS - 1) as usize] = Some(Tile { wall: false });
-            self.spawn_next_piece();
+            if collision {
+                // next piece
+                self.persist_piece();
+                self.spawn_next_piece();
+                break;
+            }
+        }
+    }
+
+    fn persist_piece(&mut self) {
+        let offset_y = (self.drop / LANE_WIDTH as i32) + 1;
+        for (x, lane) in self.piece.tiles().iter().enumerate() {
+            let x = self.lane as usize + x;
+            for (y, tile) in lane.iter().enumerate() {
+                // if there's nothing in the piece grid
+                if !tile {
+                    continue;
+                }
+
+                // only consider piece tiles that are visible
+                let Ok(y) = usize::try_from(offset_y + y as i32) else {
+                    continue;
+                };
+
+                // check for collision
+                let Some(lane) = self.lanes.get_mut(x) else {
+                    continue;
+                };
+                let Some(tile) = lane.get_mut(y) else {
+                    continue;
+                };
+                *tile = Some(Tile { wall: false });
+            }
         }
     }
 
@@ -146,6 +207,7 @@ impl Game {
 
         self.piece = next_piece.into_grid();
 
+        self.lane = INITIAL_LANE;
         self.drop = -(self.piece.lowest_point() as i32 * LANE_WIDTH as i32);
         self.drop_speed = 1; // TODO: this may get faster over time
     }
