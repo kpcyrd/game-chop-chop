@@ -33,3 +33,7 @@ pub const fn centered(outer: i32, inner: u32) -> i32 {
 pub const fn text_vertical_center(total: i32, font: &MonoFont) -> i32 {
     centered(total, font.character_size.height)
 }
+
+pub const fn text_align_center(text: &str, total: i32, font: &MonoFont) -> i32 {
+    centered(total, text.len() as u32 * font.character_size.width)
+}

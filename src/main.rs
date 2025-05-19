@@ -1,12 +1,15 @@
 #![no_std]
 #![no_main]
 
+mod ctx;
 mod display;
 mod game;
 mod gfx;
+mod intro;
 mod pieces;
 mod timer;
 
+use crate::ctx::Context;
 use crate::game::Game;
 use defmt_rtt as _;
 use eh0::timer::CountDown;
@@ -109,43 +112,41 @@ fn main() -> ! {
     let mut button_left = Input::default();
     let mut button_center = Input::default();
 
-    let mut game = Game::new();
-    game.add_obstacle_at_row(8);
-    game.add_obstacle_at_row(14);
+    let mut ctx = Context::new();
 
     // enter loop
     loop {
         match button_down.probe(|| button_down_pin.is_low().unwrap()) {
-            Some(Action::Pressed) => game.button_down(),
+            Some(Action::Pressed) => ctx.button_down(),
             Some(Action::Released) => (),
             None => (),
         }
         match button_right.probe(|| button_right_pin.is_low().unwrap()) {
-            Some(Action::Pressed) => game.button_right(),
+            Some(Action::Pressed) => ctx.button_right(),
             Some(Action::Released) => (),
             None => (),
         }
         match button_up.probe(|| button_up_pin.is_low().unwrap()) {
-            Some(Action::Pressed) => game.button_up(),
+            Some(Action::Pressed) => ctx.button_up(),
             Some(Action::Released) => (),
             None => (),
         }
         match button_left.probe(|| button_left_pin.is_low().unwrap()) {
-            Some(Action::Pressed) => game.button_left(),
+            Some(Action::Pressed) => ctx.button_left(),
             Some(Action::Released) => (),
             None => (),
         }
         match button_center.probe(|| button_center_pin.is_low().unwrap()) {
-            Some(Action::Pressed) => game.button_center(),
+            Some(Action::Pressed) => ctx.button_center(),
             Some(Action::Released) => (),
             None => (),
         }
 
-        game.tick();
+        ctx.tick();
 
         // render screen
         display.clear();
-        game.render(&mut display);
+        ctx.render(&mut display);
         display.flush().unwrap();
 
         // sleep for frame rate
