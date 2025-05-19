@@ -164,9 +164,14 @@ impl Game {
 
             if collision {
                 // next piece
-                self.persist_piece();
-                self.spawn_next_piece();
-                break;
+                if self.persist_piece() {
+                    self.spawn_next_piece();
+                    break;
+                } else {
+                    // TODO: game over
+                    *self = Game::new();
+                    return;
+                }
             }
         }
 
@@ -225,7 +230,8 @@ impl Game {
         }
     }
 
-    fn persist_piece(&mut self) {
+    fn persist_piece(&mut self) -> bool {
+        let mut gameover = false;
         let offset_y = (self.drop / LANE_WIDTH as i32) + 1;
         for (x, lane) in self.piece.tiles().iter().enumerate() {
             let x = self.lane as usize + x;
@@ -235,8 +241,14 @@ impl Game {
                     continue;
                 }
 
+                // check gameover condition
+                let y = offset_y + y as i32;
+                if y <= 0 {
+                    gameover = true;
+                }
+
                 // only consider piece tiles that are visible
-                let Ok(y) = usize::try_from(offset_y + y as i32) else {
+                let Ok(y) = usize::try_from(y) else {
                     continue;
                 };
 
@@ -250,6 +262,7 @@ impl Game {
                 *tile = Some(Tile { wall: false });
             }
         }
+        !gameover
     }
 
     pub fn spawn_next_piece(&mut self) {
