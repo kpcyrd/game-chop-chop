@@ -171,6 +171,10 @@ impl Game {
         }
 
         // check completed rows
+        self.check_completed_rows();
+    }
+
+    fn check_completed_rows(&mut self) {
         for y in 0..NUM_ROWS {
             let y = y as usize;
 
@@ -190,16 +194,33 @@ impl Game {
                 continue;
             }
 
-            for lane in &mut self.lanes {
-                let Some(slot) = lane.get_mut(y) else {
-                    continue;
-                };
-                let Some(tile) = slot else {
-                    continue;
-                };
-                if !tile.wall {
-                    *slot = None;
+            self.clear_row(y);
+            self.shift_previous_rows(y);
+        }
+    }
+
+    fn shift_previous_rows(&mut self, y: usize) {
+        for y in (0..y).rev() {
+            for (x, lane) in self.lanes.iter_mut().enumerate() {
+                if x >= MIN_LANE as usize {
+                    lane[y + 1] = lane[y];
                 }
+            }
+        }
+        for (x, lane) in self.lanes.iter_mut().enumerate() {
+            if x >= MIN_LANE as usize {
+                lane[0] = None;
+            }
+        }
+    }
+
+    fn clear_row(&mut self, y: usize) {
+        for lane in &mut self.lanes {
+            let Some(slot) = lane.get_mut(y) else {
+                continue;
+            };
+            if *slot == Some(Tile { wall: false }) {
+                *slot = None;
             }
         }
     }

@@ -7,7 +7,7 @@ use embedded_graphics::{
     draw_target::DrawTarget, pixelcolor::BinaryColor, prelude::*, primitives::Rectangle,
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Tile {
     pub wall: bool,
 }
