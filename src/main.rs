@@ -4,13 +4,13 @@
 mod ctx;
 mod display;
 mod game;
+mod gameover;
 mod gfx;
 mod intro;
 mod pieces;
 mod timer;
 
 use crate::ctx::Context;
-use crate::game::Game;
 use defmt_rtt as _;
 use eh0::timer::CountDown;
 use embedded_hal::digital::InputPin;

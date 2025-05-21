@@ -16,16 +16,16 @@ const TEXT_Y_POSITION: i32 = 79;
 const SIG_BOTTOM_PADDING: i32 = 3;
 
 pub struct Intro {
-    transition: bool,
+    pub start: bool,
 }
 
 impl Intro {
     pub const fn new() -> Self {
-        Intro { transition: false }
+        Intro { start: false }
     }
 
     pub fn button_center(&mut self) {
-        self.transition = true;
+        self.start = true;
     }
 
     pub fn render<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D)

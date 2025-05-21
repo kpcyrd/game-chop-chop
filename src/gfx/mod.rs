@@ -21,6 +21,10 @@ pub const WHITE_LINE: PrimitiveStyle<BinaryColor> = PrimitiveStyle::with_stroke(
 pub const BLACK_LINE: PrimitiveStyle<BinaryColor> =
     PrimitiveStyle::with_stroke(BinaryColor::Off, 1);
 
+pub const BIG_TEXT_STYLE: MonoTextStyle<BinaryColor> = MonoTextStyleBuilder::new()
+    .font(&ascii::FONT_6X10)
+    .text_color(BinaryColor::On)
+    .build();
 pub const TEXT_STYLE: MonoTextStyle<BinaryColor> = MonoTextStyleBuilder::new()
     .font(&ascii::FONT_4X6)
     .text_color(BinaryColor::On)
