@@ -1,9 +1,10 @@
-use crate::game::Game;
+use crate::game::{Game, SwitchTo};
 use crate::gameover::{Decision, Gameover};
 use crate::intro::Intro;
 use core::fmt::Debug;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::BinaryColor};
 
+#[allow(clippy::large_enum_variant)]
 pub enum Context {
     Intro(Intro),
     Game(Game),
@@ -12,14 +13,25 @@ pub enum Context {
 
 impl Context {
     pub const fn new() -> Self {
-        // Context::Intro(Intro::new())
-        Context::Gameover(Gameover::new(1337))
+        // Context::Gameover(Gameover::new(1337))
+        Context::Intro(Intro::new())
     }
 
-    fn start_game(&mut self) {
-        let mut game = Game::new();
-        game.add_obstacle_at_row(8);
-        game.add_obstacle_at_row(14);
+    fn start_game(&mut self, level: u32) {
+        let mut game = Game::new(level);
+        // TODO: refactor this
+        match level {
+            0 => {
+                game.add_obstacle_at_row(2);
+            }
+            1 => {
+                game.add_obstacle_at_row(7);
+            }
+            _ => {
+                game.add_obstacle_at_row(13);
+                game.add_obstacle_at_row(7);
+            }
+        }
         *self = Self::Game(game);
     }
 
@@ -67,19 +79,27 @@ impl Context {
         match self {
             Self::Intro(intro) => {
                 if intro.start {
-                    self.start_game();
+                    self.start_game(0);
                 }
             }
             Self::Game(game) => {
                 game.tick();
-                // TODO: check for game over
-                // TODO: check for next level condition
+                // check for game over/next level
+                match game.transition() {
+                    Some(SwitchTo::NextLevel(level)) => {
+                        self.start_game(level);
+                    }
+                    Some(SwitchTo::GameOver(level)) => {
+                        *self = Self::Gameover(Gameover::new(level));
+                    }
+                    None => (),
+                }
             }
             Self::Gameover(gameover) => match gameover.decision() {
                 Some(Decision::Quit) => {
                     *self = Self::Intro(Intro::new());
                 }
-                Some(Decision::Restart) => self.start_game(),
+                Some(Decision::Restart) => self.start_game(0),
                 None => (),
             },
         };

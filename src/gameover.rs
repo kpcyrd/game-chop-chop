@@ -91,14 +91,18 @@ impl Gameover {
         Self::render_centered("Game over", GAMEOVER_Y_OFFSET, gfx::BIG_TEXT_STYLE, display);
 
         // render score
-        Self::render_centered("Held", SCORE_Y_OFFSET, gfx::TEXT_STYLE, display);
+        Self::render_centered("You held", SCORE_Y_OFFSET, gfx::TEXT_STYLE, display);
 
         let mut buf = itoa::Buffer::new();
         let buf = buf.format(self.score);
         Self::render_centered(buf, SCORE_Y_OFFSET + 10, gfx::TEXT_STYLE, display);
 
         Self::render_centered(
-            "CEOs accountable",
+            if self.score == 1 {
+                "CEO accountable"
+            } else {
+                "CEOs accountable"
+            },
             SCORE_Y_OFFSET + 20,
             gfx::TEXT_STYLE,
             display,

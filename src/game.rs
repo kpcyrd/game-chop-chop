@@ -18,11 +18,21 @@ const DROP_SPEED: u8 = 1;
 const INITIAL_DROP_POSITION: i32 = -(4 * LANE_WIDTH as i32);
 const INITIAL_LANE: u32 = MIN_LANE + 2;
 
+const NEXT_LEVEL_DELAY: u8 = 18;
+const GAME_OVER_DELAY: u8 = 3;
+
 static_assertions::const_assert_eq!(NUM_ROWS, 21);
 static_assertions::const_assert!(INITIAL_LANE + 4 <= NUM_LANES);
 
+#[derive(Clone, Copy)]
+pub enum SwitchTo {
+    NextLevel(u32),
+    GameOver(u32),
+}
+
 #[derive(Clone)]
 pub struct Game {
+    level: u32,
     blade: Blade,
     lane: u32,
     piece: pieces::Grid,
@@ -30,11 +40,13 @@ pub struct Game {
     drop_timer: Timer,
     drop_speed: i32,
     lanes: [[Option<Tile>; NUM_ROWS as usize]; NUM_LANES as usize],
+    transiton: Option<(SwitchTo, Timer)>,
 }
 
 impl Game {
-    pub const fn new() -> Self {
+    pub const fn new(level: u32) -> Self {
         Game {
+            level,
             blade: Blade::new(),
             lane: INITIAL_LANE,
             piece: Piece::T.into_grid(),
@@ -59,6 +71,7 @@ impl Game {
                 [Some(Tile { wall: false }); NUM_ROWS as usize],
                 */
             ],
+            transiton: None,
         }
     }
 
@@ -146,6 +159,15 @@ impl Game {
     }
 
     pub fn tick(&mut self) {
+        // next-level condition and switch
+        if let Some((_, timer)) = &mut self.transiton {
+            timer.tick();
+            return;
+        } else if self.blade.is_off_screen() {
+            let next_level = self.level.saturating_add(1);
+            self.switch_to(SwitchTo::NextLevel(next_level));
+        }
+
         // blade fall animation
         if !self.blade.move_towards(self.next_obstacle_target_height()) {
             return;
@@ -168,8 +190,8 @@ impl Game {
                     self.spawn_next_piece();
                     break;
                 } else {
-                    // TODO: game over
-                    *self = Game::new();
+                    // game over
+                    self.switch_to(SwitchTo::GameOver(self.level));
                     return;
                 }
             }
@@ -177,6 +199,19 @@ impl Game {
 
         // check completed rows
         self.check_completed_rows();
+    }
+
+    fn switch_to(&mut self, target: SwitchTo) {
+        self.transiton
+            .get_or_insert_with(|| (target, Timer::new(match target {
+                SwitchTo::NextLevel(_) => NEXT_LEVEL_DELAY,
+                SwitchTo::GameOver(_) => GAME_OVER_DELAY,
+            })));
+    }
+
+    pub fn transition(&self) -> Option<SwitchTo> {
+        let (target, timer) = self.transiton.as_ref()?;
+        timer.is_due().then_some(*target)
     }
 
     fn check_completed_rows(&mut self) {
@@ -279,7 +314,8 @@ impl Game {
         self.drop_speed = 1; // TODO: this may get faster over time
     }
 
-    pub fn add_obstacle_at_row(&mut self, row: usize) {
+    pub fn add_obstacle_at_row(&mut self, row: u32) {
+        let row = NUM_ROWS.saturating_sub(row) as usize;
         self.lanes[0][row] = Some(Tile { wall: false });
         self.lanes[1][row] = Some(Tile { wall: false });
     }
