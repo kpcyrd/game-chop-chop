@@ -2,11 +2,13 @@ use crate::gfx;
 use crate::gfx::blade::Blade;
 use crate::gfx::tile::Tile;
 use crate::pieces::{self, Piece};
+use crate::random::Random;
 use crate::timer::Timer;
 use core::fmt::Debug;
 use embedded_graphics::{
     draw_target::DrawTarget, pixelcolor::BinaryColor, prelude::*, primitives::Polyline, text::Text,
 };
+use rand_core::RngCore;
 
 const MIN_LANE: u32 = 2;
 pub const NUM_LANES: u32 = 8;
@@ -36,7 +38,6 @@ pub struct Game {
     blade: Blade,
     lane: u32,
     piece: pieces::Grid,
-    piece_counter: u32, // occasionally drop an I piece
     drop: i32,
     drop_timer: Timer,
     drop_speed: i32,
@@ -51,7 +52,6 @@ impl Game {
             blade: Blade::new(),
             lane: INITIAL_LANE,
             piece: Piece::T.into_grid(),
-            piece_counter: 0,
             drop: INITIAL_DROP_POSITION,
             drop_timer: Timer::new(DROP_SPEED),
             drop_speed: 1,
@@ -160,7 +160,7 @@ impl Game {
         self.button_down();
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick<R: RngCore>(&mut self, random: &mut Random<R>) {
         // next-level condition and switch
         if let Some((_, timer)) = &mut self.transiton {
             timer.tick();
@@ -189,7 +189,7 @@ impl Game {
             if collision {
                 // next piece
                 if self.persist_piece() {
-                    self.spawn_next_piece();
+                    self.spawn_next_piece(random);
                     break;
                 } else {
                     // game over
@@ -306,17 +306,28 @@ impl Game {
         !gameover
     }
 
-    pub fn spawn_next_piece(&mut self) {
-        let next_piece = if self.piece_counter == 4 {
-            self.piece_counter = 0;
-            Piece::I
-        } else {
-            self.piece_counter += 1;
-            match self.piece.piece {
-                Piece::T => Piece::S,
-                Piece::S => Piece::T,
-                Piece::O => Piece::T,
-                _ => Piece::O,
+    pub fn spawn_next_piece<R: RngCore>(&mut self, random: &mut Random<R>) {
+        let next_piece = {
+            let mut current = Some(self.piece.piece);
+            loop {
+                let random = (random.squeeze() as u8) % 8;
+                let mut next = match random {
+                    0 => Some(Piece::O),
+                    1 => Some(Piece::I),
+                    2 => Some(Piece::J),
+                    3 => Some(Piece::L),
+                    4 => Some(Piece::T),
+                    5 => Some(Piece::S),
+                    6 => Some(Piece::Z),
+                    _ => None,
+                };
+                // reduce the chance of a duplicate piece, but not impossible
+                if next == current.take() {
+                    next = None;
+                }
+                if let Some(piece) = next {
+                    break piece;
+                }
             }
         };
 

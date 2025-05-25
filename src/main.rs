@@ -8,9 +8,11 @@ mod gameover;
 mod gfx;
 mod intro;
 mod pieces;
+mod random;
 mod timer;
 
 use crate::ctx::Context;
+use crate::random::Random;
 use defmt_rtt as _;
 use eh0::timer::CountDown;
 use embedded_hal::digital::InputPin;
@@ -25,6 +27,7 @@ use waveshare_rp2040_zero::{
         clocks::{Clock, init_clocks_and_plls},
         i2c::I2C,
         pac,
+        rosc::RingOscillator,
         timer::Timer,
         watchdog::Watchdog,
     },
@@ -78,6 +81,7 @@ fn main() -> ! {
 
     let timer = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
     let mut delay = timer.count_down();
+    let rosc = RingOscillator::new(pac.ROSC).initialize();
 
     // Configure gpio
     let sio = Sio::new(pac.SIO);
@@ -113,6 +117,7 @@ fn main() -> ! {
     let mut button_center = Input::default();
 
     let mut ctx = Context::new();
+    let mut random = Random::new(rosc);
 
     // enter loop
     loop {
@@ -142,7 +147,7 @@ fn main() -> ! {
             None => (),
         }
 
-        ctx.tick();
+        ctx.tick(&mut random);
 
         // render screen
         display.clear();

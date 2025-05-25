@@ -25,6 +25,7 @@ opt-level = 3
 overflow-checks = false
 
 [dependencies]
+ascon = "0.4.0"
 cortex-m-rt = "0.7.3"
 defmt-rtt = "0.4.0"
 eh0 = { package = "embedded-hal", version = "0.2" }
@@ -34,6 +35,7 @@ fugit = "0.3.7"
 itoa = "1.0.14"
 nb = "1.1.0"
 panic-halt = "1"
+rand_core = "0.6"
 sh1106 = "0.5.0"
 static_assertions = "1.1.0"
 waveshare-rp2040-zero = "0.8"

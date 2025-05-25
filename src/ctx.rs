@@ -1,8 +1,10 @@
 use crate::game::{Game, SwitchTo};
 use crate::gameover::{Decision, Gameover};
 use crate::intro::Intro;
+use crate::random::Random;
 use core::fmt::Debug;
 use embedded_graphics::{draw_target::DrawTarget, pixelcolor::BinaryColor};
+use rand_core::RngCore;
 
 #[allow(clippy::large_enum_variant)]
 pub enum Context {
@@ -81,7 +83,7 @@ impl Context {
         }
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick<R: RngCore>(&mut self, random: &mut Random<R>) {
         match self {
             Self::Intro(intro) => {
                 if intro.start {
@@ -89,7 +91,7 @@ impl Context {
                 }
             }
             Self::Game(game) => {
-                game.tick();
+                game.tick(random);
                 // check for game over/next level
                 match game.transition() {
                     Some(SwitchTo::NextLevel(level)) => {
