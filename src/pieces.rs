@@ -146,7 +146,7 @@ impl Piece {
                 tiles[2][0] = true;
                 tiles[1][1] = true;
                 tiles[2][1] = true;
-                tiles[2][1] = true;
+                tiles[1][2] = true;
             }
         }
     }
