@@ -36,6 +36,7 @@ pub struct Game {
     blade: Blade,
     lane: u32,
     piece: pieces::Grid,
+    piece_counter: u32, // occasionally drop an I piece
     drop: i32,
     drop_timer: Timer,
     drop_speed: i32,
@@ -50,6 +51,7 @@ impl Game {
             blade: Blade::new(),
             lane: INITIAL_LANE,
             piece: Piece::T.into_grid(),
+            piece_counter: 0,
             drop: INITIAL_DROP_POSITION,
             drop_timer: Timer::new(DROP_SPEED),
             drop_speed: 1,
@@ -202,11 +204,15 @@ impl Game {
     }
 
     fn switch_to(&mut self, target: SwitchTo) {
-        self.transiton
-            .get_or_insert_with(|| (target, Timer::new(match target {
-                SwitchTo::NextLevel(_) => NEXT_LEVEL_DELAY,
-                SwitchTo::GameOver(_) => GAME_OVER_DELAY,
-            })));
+        self.transiton.get_or_insert_with(|| {
+            (
+                target,
+                Timer::new(match target {
+                    SwitchTo::NextLevel(_) => NEXT_LEVEL_DELAY,
+                    SwitchTo::GameOver(_) => GAME_OVER_DELAY,
+                }),
+            )
+        });
     }
 
     pub fn transition(&self) -> Option<SwitchTo> {
@@ -301,10 +307,17 @@ impl Game {
     }
 
     pub fn spawn_next_piece(&mut self) {
-        let next_piece = if self.piece.piece == Piece::T {
-            Piece::S
+        let next_piece = if self.piece_counter == 4 {
+            self.piece_counter = 0;
+            Piece::I
         } else {
-            Piece::T
+            self.piece_counter += 1;
+            match self.piece.piece {
+                Piece::T => Piece::S,
+                Piece::S => Piece::T,
+                Piece::O => Piece::T,
+                _ => Piece::O,
+            }
         };
 
         self.piece = next_piece.into_grid();
@@ -314,6 +327,8 @@ impl Game {
         self.drop_speed = 1; // TODO: this may get faster over time
     }
 
+    /// lowest possible number can be 1
+    /// good upper bound is 15
     pub fn add_obstacle_at_row(&mut self, row: u32) {
         let row = NUM_ROWS.saturating_sub(row) as usize;
         self.lanes[0][row] = Some(Tile { wall: false });
