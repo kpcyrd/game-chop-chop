@@ -24,6 +24,17 @@ impl Intro {
         Intro { start: false }
     }
 
+    #[inline(always)]
+    pub fn button_down(&mut self) {
+        self.button_center();
+    }
+
+    #[inline(always)]
+    pub fn button_right(&mut self) {
+        self.button_center();
+    }
+
+    #[inline(always)]
     pub fn button_center(&mut self) {
         self.start = true;
     }

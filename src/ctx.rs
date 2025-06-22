@@ -53,7 +53,7 @@ impl Context {
 
     pub fn button_down(&mut self) {
         match self {
-            Self::Intro(_intro) => (),
+            Self::Intro(intro) => intro.button_down(),
             Self::Game(game) => game.button_down(),
             Self::Gameover(gameover) => gameover.button_down(),
         }
@@ -61,7 +61,7 @@ impl Context {
 
     pub fn button_right(&mut self) {
         match self {
-            Self::Intro(_intro) => (),
+            Self::Intro(intro) => intro.button_right(),
             Self::Game(game) => game.button_right(),
             Self::Gameover(gameover) => gameover.button_right(),
         }
