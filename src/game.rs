@@ -6,7 +6,11 @@ use crate::random::Random;
 use crate::timer::Timer;
 use core::fmt::Debug;
 use embedded_graphics::{
-    draw_target::DrawTarget, pixelcolor::BinaryColor, prelude::*, primitives::Polyline, text::Text,
+    draw_target::DrawTarget,
+    pixelcolor::BinaryColor,
+    prelude::*,
+    primitives::{Line, Polyline},
+    text::Text,
 };
 use rand_core::RngCore;
 
@@ -14,7 +18,11 @@ const MIN_LANE: u32 = 2;
 pub const NUM_LANES: u32 = 8;
 const NUM_ROWS: u32 = gfx::UDISPLAY_HEIGHT / LANE_WIDTH;
 pub const LANE_WIDTH: u32 = 6;
-const LANE_OFFSET: Point = Point::new(gfx::DISPLAY_WIDTH - (LANE_WIDTH * NUM_LANES) as i32, 0);
+const LANE_OFFSET: Point = Point::new(
+    gfx::DISPLAY_WIDTH - (LANE_WIDTH * NUM_LANES) as i32 - RIGHT_BORDER,
+    0,
+);
+pub const RIGHT_BORDER: i32 = 1;
 
 const DROP_SPEED: u8 = 1;
 const INITIAL_DROP_POSITION: i32 = -(4 * LANE_WIDTH as i32);
@@ -385,10 +393,22 @@ impl Game {
             .draw(display)
             .unwrap();
 
+        // render right border
+        Line::new(
+            Point::new(gfx::DISPLAY_WIDTH - RIGHT_BORDER, 0),
+            Point::new(
+                gfx::DISPLAY_WIDTH - RIGHT_BORDER,
+                (NUM_ROWS * LANE_WIDTH) as i32,
+            ),
+        )
+        .into_styled(gfx::WHITE_LINE)
+        .draw(display)
+        .unwrap();
+
         // render text on success
         if self.blade.is_off_screen() {
             let y = gfx::text_vertical_center(gfx::DISPLAY_HEIGHT, gfx::TEXT_STYLE.font);
-            Text::new("yey!", Point::new(4, y), gfx::TEXT_STYLE)
+            Text::new("yey!", Point::new(3, y), gfx::TEXT_STYLE)
                 .draw(display)
                 .unwrap();
         }

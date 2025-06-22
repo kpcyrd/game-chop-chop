@@ -12,11 +12,13 @@ pub const ANGLE: u32 = 5;
 pub const SHARP: i32 = 1;
 pub const PADDING: i32 = 2;
 
-pub const X_OFFSET: i32 =
-    gfx::DISPLAY_WIDTH - ((game::NUM_LANES - 1) * game::LANE_WIDTH) as i32 - PADDING;
+pub const X_OFFSET: i32 = gfx::DISPLAY_WIDTH
+    - ((game::NUM_LANES - 1) * game::LANE_WIDTH) as i32
+    - game::RIGHT_BORDER
+    - PADDING;
 pub const TOP_SPEED: u8 = 4;
 
-static_assertions::const_assert_eq!(X_OFFSET, 20);
+static_assertions::const_assert_eq!(X_OFFSET, 19);
 
 #[derive(Clone)]
 pub struct Blade {
