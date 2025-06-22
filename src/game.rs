@@ -312,7 +312,7 @@ impl Game {
             loop {
                 let random = (random.squeeze() as u8) % 8;
                 let mut next = match random {
-                    0 => Some(Piece::O),
+                    0 => None, // Removed: Some(Piece::O),
                     1 => Some(Piece::I),
                     2 => Some(Piece::J),
                     3 => Some(Piece::L),
