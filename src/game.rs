@@ -1,6 +1,7 @@
 use crate::gfx;
 use crate::gfx::blade::Blade;
 use crate::gfx::tile::Tile;
+use crate::narrator::Narrator;
 use crate::pieces::{self, Piece};
 use crate::random::Random;
 use crate::timer::Timer;
@@ -49,12 +50,18 @@ pub struct Game {
     drop: i32,
     drop_timer: Timer,
     drop_speed: i32,
+    narrator: Option<Narrator>,
     lanes: [[Option<Tile>; NUM_ROWS as usize]; NUM_LANES as usize],
     transiton: Option<(SwitchTo, Timer)>,
 }
 
 impl Game {
     pub const fn new(level: u32) -> Self {
+        let narrator = match level {
+            0 => Some(Narrator::level0()),
+            _ => None,
+        };
+
         Game {
             level,
             blade: Blade::new(),
@@ -63,6 +70,7 @@ impl Game {
             drop: INITIAL_DROP_POSITION,
             drop_timer: Timer::new(DROP_SPEED),
             drop_speed: 1,
+            narrator,
             lanes: [
                 [None; NUM_ROWS as usize],
                 [Some(Tile { wall: true }); NUM_ROWS as usize],
@@ -146,9 +154,15 @@ impl Game {
     }
 
     pub fn button_down(&mut self) {
-        self.try_to(|game| {
-            game.drop_speed = i32::MAX;
-        });
+        if let Some(narrator) = &mut self.narrator {
+            if narrator.visible() {
+                self.narrator = None;
+            }
+        } else {
+            self.try_to(|game| {
+                game.drop_speed = i32::MAX;
+            });
+        }
     }
 
     pub fn button_right(&mut self) {
@@ -180,6 +194,12 @@ impl Game {
 
         // blade fall animation
         if !self.blade.move_towards(self.next_obstacle_target_height()) {
+            return;
+        }
+
+        // display narrator (if any)
+        if let Some(narrator) = &mut self.narrator {
+            narrator.tick();
             return;
         }
 
@@ -404,6 +424,11 @@ impl Game {
         .into_styled(gfx::WHITE_LINE)
         .draw(display)
         .unwrap();
+
+        // render narrator
+        if let Some(narrator) = &self.narrator {
+            narrator.render(display);
+        }
 
         // render text on success
         if self.blade.is_off_screen() {

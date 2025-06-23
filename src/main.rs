@@ -7,6 +7,7 @@ mod game;
 mod gameover;
 mod gfx;
 mod intro;
+mod narrator;
 mod pieces;
 mod random;
 mod timer;
