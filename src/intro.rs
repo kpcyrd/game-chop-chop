@@ -11,9 +11,12 @@ use embedded_graphics::{
 const INTRO: ImageRaw<BinaryColor> = ImageRaw::new(include_bytes!("../video/intro.raw"), 37);
 const SIG: ImageRaw<BinaryColor> = ImageRaw::new(include_bytes!("../video/sig.raw"), 35);
 
-const LOGO_Y_POSITION: i32 = 6;
-const TEXT_Y_POSITION: i32 = 79;
-const SIG_BOTTOM_PADDING: i32 = 3;
+const LOGO_Y_POSITION: i32 = 0;
+const HEADLINE_Y_POSITION: i32 = 66;
+const TEXT_Y_POSITION: i32 = 86;
+const SIG_BOTTOM_PADDING: i32 = 0;
+
+const LINE_HEIGHT: i32 = 7;
 
 pub struct Intro {
     pub start: bool,
@@ -44,6 +47,7 @@ impl Intro {
         <D as DrawTarget>::Error: Debug,
     {
         self.render_logo(display);
+        self.render_headline(display);
         self.render_text(display);
         self.render_sig(display);
     }
@@ -58,15 +62,18 @@ impl Intro {
         Image::new(&INTRO, point).draw(display).unwrap();
     }
 
-    #[inline(always)]
-    fn render_text<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D)
-    where
+    fn text<D: DrawTarget<Color = BinaryColor>>(
+        &self,
+        y_offset: i32,
+        text: &[&str],
+        display: &mut D,
+    ) where
         <D as DrawTarget>::Error: Debug,
     {
         let style = gfx::TEXT_STYLE;
 
-        for (num, text) in ["Designed and", "programmed by"].iter().enumerate() {
-            let y = TEXT_Y_POSITION + (num as i32 * 9);
+        for (num, text) in text.iter().enumerate() {
+            let y = y_offset + (num as i32 * LINE_HEIGHT);
             Text::with_baseline(
                 text,
                 Point::new(
@@ -79,6 +86,22 @@ impl Intro {
             .draw(display)
             .unwrap();
         }
+    }
+
+    #[inline(always)]
+    fn render_headline<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D)
+    where
+        <D as DrawTarget>::Error: Debug,
+    {
+        self.text(HEADLINE_Y_POSITION, &["French Summer", "2025"], display);
+    }
+
+    #[inline(always)]
+    fn render_text<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D)
+    where
+        <D as DrawTarget>::Error: Debug,
+    {
+        self.text(TEXT_Y_POSITION, &["Designed and", "programmed by"], display);
     }
 
     #[inline(always)]
