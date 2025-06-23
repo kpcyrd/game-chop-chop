@@ -24,10 +24,10 @@ impl Context {
         // TODO: refactor this
         match level {
             0 => {
-                game.add_obstacle_at_row(2);
+                game.add_obstacle_at_row(7);
             }
             1 => {
-                game.add_obstacle_at_row(7);
+                game.add_obstacle_at_row(2);
             }
             2 => {
                 game.add_obstacle_at_row(13);
