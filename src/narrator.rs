@@ -1,6 +1,7 @@
 use crate::gfx;
 use crate::timer::Timer;
 use core::fmt::Debug;
+use core::mem;
 use embedded_graphics::{
     draw_target::DrawTarget,
     mono_font::MonoFont,
@@ -11,8 +12,6 @@ use embedded_graphics::{
 };
 
 const NARRATOR_Y_OFFSET: i32 = 7;
-// const NARRATOR_X_OFFSET: i32 = gfx::DISPLAY_WIDTH - NARRATOR_AREA_WIDTH as i32 - game::RIGHT_BORDER;
-// const NARRATOR_AREA_WIDTH: u32 = game::LANE_WIDTH * game::NUM_LANES;
 const NARRATOR_X_OFFSET: i32 = 0;
 const NARRATOR_AREA_WIDTH: u32 = gfx::UDISPLAY_WIDTH;
 
@@ -24,14 +23,33 @@ const BACKGROUND_Y_PADDING: i32 = 1;
 pub struct Narrator {
     text: &'static [&'static str],
     delay: Timer,
+    scroll: Timer,
 }
 
 impl Narrator {
     pub const fn level0() -> Self {
         Narrator {
-            text: &["Oh no,", "it's stuck!", "", "Can you help us?", "._."],
-            delay: Timer::new(6),
+            text: &["Oh no,", "it's stuck!", " ", "Can you help us?", "._."],
+            delay: Timer::new(3),
+            scroll: Timer::infinite(),
         }
+    }
+
+    pub fn button_pressed(mut self) -> Option<Self> {
+        if !self.started() {
+            Some(self)
+        } else if self.done() {
+            None
+        } else {
+            self.reveal();
+            Some(self)
+        }
+    }
+
+    fn length(&self) -> usize {
+        self.text
+            .iter()
+            .fold(0, |acc, text| acc.saturating_add(text.len()))
     }
 
     const fn center(y: i32, text: &str, font: &MonoFont) -> Point {
@@ -45,13 +63,25 @@ impl Narrator {
     where
         <D as DrawTarget>::Error: Debug,
     {
-        if !self.visible() {
+        if !self.started() {
             return;
         }
+
+        let mut budget = self.scroll.get() as usize;
 
         let style = gfx::TEXT_STYLE;
         for (num, text) in self.text.iter().enumerate() {
             let y = NARRATOR_Y_OFFSET + (num as i32 * LINE_HEIGHT);
+
+            let text = if let Some(remaining) = budget.checked_sub(text.len()) {
+                // text is fitting in entirety
+                budget = remaining;
+                text
+            } else {
+                // truncate text to scroll position
+                let idx = mem::take(&mut budget);
+                &text[..idx]
+            };
 
             // draw black background
             Rectangle::new(
@@ -71,16 +101,35 @@ impl Narrator {
             )
             .draw(display)
             .unwrap();
+
+            // reached end of current scroll position
+            if budget == 0 {
+                break;
+            }
         }
     }
 
     #[inline]
     pub const fn tick(&mut self) {
-        self.delay.tick();
+        if self.started() {
+            self.scroll.tick();
+        } else {
+            self.delay.tick();
+        }
     }
 
     #[inline]
-    pub const fn visible(&self) -> bool {
+    pub const fn started(&self) -> bool {
         self.delay.is_due()
+    }
+
+    #[inline]
+    pub const fn reveal(&mut self) {
+        self.scroll.set_due();
+    }
+
+    #[inline]
+    pub fn done(&self) -> bool {
+        self.scroll.get() as usize >= self.length()
     }
 }

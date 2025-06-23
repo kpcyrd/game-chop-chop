@@ -154,10 +154,8 @@ impl Game {
     }
 
     pub fn button_down(&mut self) {
-        if let Some(narrator) = &mut self.narrator {
-            if narrator.visible() {
-                self.narrator = None;
-            }
+        if let Some(narrator) = self.narrator.take() {
+            self.narrator = narrator.button_pressed();
         } else {
             self.try_to(|game| {
                 game.drop_speed = i32::MAX;
