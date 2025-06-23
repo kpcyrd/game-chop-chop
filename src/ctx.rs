@@ -33,11 +33,16 @@ impl Context {
                 game.add_obstacle_at_row(13);
                 game.add_obstacle_at_row(7);
             }
-            _ => {
+            3 => {
                 // this is a good maximum height
                 game.add_obstacle_at_row(15);
                 game.add_obstacle_at_row(4);
                 game.add_obstacle_at_row(1);
+            }
+            _ => {
+                // TODO: add more levels because this one isn't very fun
+                game.add_tough_obstacle_at_row(4);
+                game.add_obstacle_at_row(8);
             }
         }
         *self = Self::Game(game);

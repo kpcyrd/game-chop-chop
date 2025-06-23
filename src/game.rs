@@ -191,8 +191,12 @@ impl Game {
         }
 
         // blade fall animation
-        if !self.blade.move_towards(self.next_obstacle_target_height()) {
+        let (obstable, obstacle_height) = self.next_obstacle();
+        if !self.blade.move_towards(obstacle_height) {
             return;
+        }
+        if let Some(row) = obstable {
+            self.blade_hits_row(row);
         }
 
         // display narrator (if any)
@@ -372,13 +376,29 @@ impl Game {
         self.lanes[1][row] = Some(Tile { wall: false });
     }
 
-    pub fn next_obstacle_target_height(&self) -> i32 {
+    pub fn add_tough_obstacle_at_row(&mut self, row: u32) {
+        let row = NUM_ROWS.saturating_sub(row) as usize;
+        self.lanes[0][row] = Some(Tile { wall: true });
+        self.lanes[1][row] = Some(Tile { wall: true });
+    }
+
+    pub fn next_obstacle(&self) -> (Option<usize>, i32) {
         for (idx, tile) in self.lanes[0].iter().enumerate() {
             if tile.is_some() {
-                return (idx as i32 * LANE_WIDTH as i32) - gfx::blade::PADDING;
+                let height = (idx as i32 * LANE_WIDTH as i32) - gfx::blade::PADDING;
+                return (Some(idx), height);
             }
         }
-        i32::MAX
+        (None, i32::MAX)
+    }
+
+    pub fn blade_hits_row(&mut self, row: usize) {
+        for idx in [0, 1] {
+            let tile = &mut self.lanes[idx][row];
+            if let Some(tile) = tile {
+                tile.wall = false;
+            }
+        }
     }
 
     pub fn render<D: DrawTarget<Color = BinaryColor>>(&self, display: &mut D)
