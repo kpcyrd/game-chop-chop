@@ -39,11 +39,38 @@ impl Context {
                 game.add_obstacle_at_row(4);
                 game.add_obstacle_at_row(1);
             }
-            _ => {
-                // TODO: add more levels because this one isn't very fun
-                game.add_tough_obstacle_at_row(4);
-                game.add_obstacle_at_row(8);
+            4 => {
+                // demo the tough obstacle
+                game.add_obstacle_at_row(4);
+                game.add_tough_obstacle_at_row(7);
             }
+            5 => {
+                // now have the player actually solve it
+                game.add_tough_obstacle_at_row(4);
+                game.add_obstacle_at_row(7);
+            }
+            num => match num % 4 {
+                0 => {
+                    game.add_obstacle_at_row(3);
+                    game.add_obstacle_at_row(4);
+                    game.add_obstacle_at_row(5);
+                    game.add_obstacle_at_row(6);
+                }
+                1 => {
+                    game.add_tough_obstacle_at_row(4);
+                    game.add_obstacle_at_row(5);
+                }
+                2 => {
+                    game.add_obstacle_at_row(2);
+                    game.add_obstacle_at_row(6);
+                    game.add_obstacle_at_row(14);
+                }
+                _ => {
+                    game.add_obstacle_at_row(1);
+                    game.add_obstacle_at_row(5);
+                    game.add_tough_obstacle_at_row(13);
+                }
+            },
         }
         *self = Self::Game(game);
     }

@@ -342,13 +342,13 @@ impl Game {
             loop {
                 let random = (random.squeeze() as u8) % 8;
                 let mut next = match random {
-                    0 => None, // Removed: Some(Piece::O),
+                    0 => continue, // Removed: Some(Piece::O),
                     1 => Some(Piece::I),
                     2 => Some(Piece::J),
                     3 => Some(Piece::L),
                     4 => Some(Piece::T),
                     5 => Some(Piece::S),
-                    6 => Some(Piece::Z),
+                    6 => Some(Piece::T), // Removed: Some(Piece::Z),
                     _ => None,
                 };
                 // reduce the chance of a duplicate piece, but not impossible
